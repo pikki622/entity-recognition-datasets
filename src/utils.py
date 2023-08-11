@@ -26,28 +26,24 @@ def get_entities(corpus_name):
     of entity mentions in the corpus.
 
     """
-    r = read_conll(corpus_name); data = list(r)
+    r = read_conll(corpus_name)
+    data = list(r)
     data2 = [ [(w,iob) for ((w,p),iob) in d] for d in data]
     data3 = [i for u in data2 for i in u]
 
     tags = sentence_utils.get_tagset(data, with_prefix=True)
-    taglist = set([t[2:] for t in list(tags) if t !='O'])
-    entities = {}
-    for key in taglist:
-        entities[key] = []
+    taglist = {t[2:] for t in list(tags) if t !='O'}
+    entities = {key: [] for key in taglist}
     data3.append((u'O',u'O'))
     ent = []
     entitytype = 'None'
-    for i,item in enumerate(data3[0:-1]):
+    for i, item in enumerate(data3[:-1]):
         if item[1] != 'O':
             if item[1][0] == 'B':
                 ent = []
-                ent.append(item[0])
-            else: # == I
-                if item[1][0] != 'I':
-                    raise ValueError("Should be I")
-                ent.append(item[0])
-
+            elif item[1][0] != 'I':
+                raise ValueError("Should be I")
+            ent.append(item[0])
             if data3[i+1][1][2:] != item[1][2:] or data3[i+1][1][0] == 'B':
                 #print i, item
                 entitytype = item[1][2:]
@@ -146,13 +142,13 @@ def iob1_to_iob2(annotated_sentence):
 
         if ner != 'O':
             if idx == 0:
-                ner = "B-" + ner[2:]
-            elif ner[0:2] == 'B-':
-                ner = 'B-'+ner[2:]
+                ner = f"B-{ner[2:]}"
+            elif ner[:2] == 'B-':
+                ner = f'B-{ner[2:]}'
             elif annotated_sentence[idx - 1][2][2:] == ner[2:]:
-                ner = "I-" + ner[2:]
+                ner = f"I-{ner[2:]}"
             else:
-                ner = "B-" + ner[2:]
+                ner = f"B-{ner[2:]}"
         proper_iob_tokens.append((word, tag, ner))
     return proper_iob_tokens
 
@@ -174,11 +170,11 @@ def to_conll_iob(annotated_sentence):
 
         if ner != 'O':
             if idx == 0:
-                ner = "B-" + ner
+                ner = f"B-{ner}"
             elif annotated_sentence[idx - 1][2] == ner:
-                ner = "I-" + ner
+                ner = f"I-{ner}"
             else:
-                ner = "B-" + ner
+                ner = f"B-{ner}"
         proper_iob_tokens.append((word, tag, ner))
     return proper_iob_tokens
 
@@ -224,7 +220,7 @@ def read_conll(corpus_name):
                     for annotated_sentence in annotated_sentences:
                         if annotated_sentence not in ['-DOCSTART- -X- O O', '-DOCSTART- -X- -X- O']:
                             # Split words:
-                            annotated_tokens = [seq for seq in annotated_sentence.split('\n')]
+                            annotated_tokens = list(annotated_sentence.split('\n'))
                             standard_form_tokens = []
 
                             for idx, annotated_token in enumerate(annotated_tokens):
@@ -284,8 +280,7 @@ def attach_domain(corpus, domt):
     if domt not in {'src','tgt'}: # Domain type - source or target
         raise ValueError("domt must be 'src' or 'tgt'.")
 
-    data_with_domain = [[((w,t,domt),iob) for ((w,t),iob) in d] for d in corpus]
-    return data_with_domain
+    return [[((w,t,domt),iob) for ((w,t),iob) in d] for d in corpus]
 
 
 def get_NER_tagcounts(corpus_name):
@@ -315,15 +310,15 @@ def get_NER_tagcounts(corpus_name):
                     for annotated_sentence in annotated_sentences:
                         if annotated_sentence not in ['-DOCSTART- -X- O O', '-DOCSTART- -X- -X- O']:
                             # Split words:
-                            annotated_tokens = [seq for seq in annotated_sentence.split('\n')]
+                            annotated_tokens = list(annotated_sentence.split('\n'))
                             standard_form_tokens = []
 
-                            for idx, annotated_token in enumerate(annotated_tokens):
-                                if sep=='multispace':
-                                    annotations = annotated_token.split()   # Split annotations
-                                else:
-                                    annotations = annotated_token.split(sep)   # Split annotations
-
+                            for annotated_token in annotated_tokens:
+                                annotations = (
+                                    annotated_token.split()
+                                    if sep == 'multispace'
+                                    else annotated_token.split(sep)
+                                )
                                 word, tag, ner = annotations[word_pos], annotations[pos_pos], annotations[iob_pos]
                                 ner_tags[ner] += 1
 
@@ -352,15 +347,15 @@ def read_NER_output(filename):
 
         for annotated_sentence in annotated_sentences:
             # Split words:
-            annotated_tokens = [seq for seq in annotated_sentence.split('\n')]
+            annotated_tokens = list(annotated_sentence.split('\n'))
             standard_form_tokens = []
 
-            for idx, annotated_token in enumerate(annotated_tokens):
-                if sep=='multispace':
-                    annotations = annotated_token.split()   # Split annotations
-                else:
-                    annotations = annotated_token.split(sep)   # Split annotations
-
+            for annotated_token in annotated_tokens:
+                annotations = (
+                    annotated_token.split()
+                    if sep == 'multispace'
+                    else annotated_token.split(sep)
+                )
                 try:
                     word, ner = annotations[word_pos], annotations[iob_pos]
                 except:

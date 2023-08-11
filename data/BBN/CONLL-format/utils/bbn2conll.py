@@ -52,9 +52,7 @@ def parse_all(filename, DESC_DECISION='merge'):
     s3 = make_newlist(s2)
     s4 = tokenizeit(s3) #tokenize (properly!) the text fragments
     s5 = make_newlistIOB(s4, DESC_DECISION)
-     # last step: remove \n if more than one in a row:
-    s6 = remove_consecutive_newlines(s5)
-    return s6
+    return remove_consecutive_newlines(s5)
 
 
 def parse_docs(filename):
@@ -67,7 +65,7 @@ def parse_docs(filename):
     docs = root.getchildren()
     #c1 = docs[1]
     store = []
-    for ii,doc in enumerate(docs):
+    for doc in docs:
         #print ii
         p = parse_doc(doc)
         store.extend(p)
@@ -79,7 +77,7 @@ def parse_doc(c1):
     iobs_text = [c.text for c in children]
     iobs_type = [c.attrib.get('TYPE') for c in children]
     store = []
-    for i,item in enumerate(c1.itertext()):
+    for item in c1.itertext():
         #print i,item
         if item in iobs_text:
             ind = iobs_text.index(item) # index of first match
@@ -126,14 +124,12 @@ def splitit(t):
     s=""
     for i in t:
         if i == '\n':
-            store.append(s)
-            store.append('\n')
+            store.extend((s, '\n'))
             s=""
         else:
             s = s+i
     store = store[:-1]
-    store = [i.strip(' ') for i in store if i != '']
-    return store
+    return [i.strip(' ') for i in store if i != '']
 
 #NOTE use this once there are a bunch of ['\n','blabla'].  THEN need
 # to word tokenize each one again, and then run this again.
@@ -277,20 +273,15 @@ def shall_use_split(text, do_not_tokenize):
     dd = {3:[],4:[],5:[],6:[],7:[],8:[]}
     for i in do_not_tokenize:
         dd[len(i)].append(i)
-    # Only checks the end of the string (for now..)
-    if any([text[-k:] in dd[k] for k in [3,4,5,6,7,8]]):
-        willsplit = True
-    else:
-        willsplit = False
-    return willsplit
+    return any(text[-k:] in dd[k] for k in [3,4,5,6,7,8])
 
 
 def remove_consecutive_newlines(store):
-    newstore = []
-    for i,x in enumerate(store[:-1]):
-        if not (x[0] == '\n' and store[i+1][0] == '\n'):
-            newstore.append(x)
-    return newstore
+    return [
+        x
+        for i, x in enumerate(store[:-1])
+        if x[0] != '\n' or store[i + 1][0] != '\n'
+    ]
 
 
 def tokenizeit(store):

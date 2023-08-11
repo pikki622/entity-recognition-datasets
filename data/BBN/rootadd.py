@@ -7,8 +7,8 @@ for filename in filenames:
     with open(DIR + filename, 'r') as f:
         d = f.read()
 
-    if d[0:6] != '<ROOT>':
-        d = '<ROOT>' + d
+    if d[:6] != '<ROOT>':
+        d = f'<ROOT>{d}'
 
     if d[-10:] == '\r\n</ROOT\r\n':
         d = d[:-10] + '\r\n</ROOT>\r\n'

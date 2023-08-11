@@ -23,6 +23,7 @@ NOTE: To later convert from brat standoff to CONLL format, we used the script
 standoff2conll from https://github.com/spyysalo/standoff2conll
 
 """
+
 import json
 import codecs
 import os
@@ -30,14 +31,10 @@ import os
 # TOGGLE WHETHER TO ONLY KEEP THOSE WITH CONFIDENCE >0.5, or to keep all.
 CONF_FILTER = True
 
-if CONF_FILTER:
-    confidence_val = 0.5
-else:
-    confidence_val = 0.0
-
+confidence_val = 0.5 if CONF_FILTER else 0.0
 DIR = '../../'
-DATADIR = DIR+'data/'
-BRATDIR = DIR+'CONLL-format/data/bratann/'
+DATADIR = f'{DIR}data/'
+BRATDIR = f'{DIR}CONLL-format/data/bratann/'
 
 # example:
 # TOPDIRNAME = 'Australian_Department_of_Foreign_Affairs'

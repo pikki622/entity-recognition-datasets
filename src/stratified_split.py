@@ -37,8 +37,8 @@ def write_new_split(corpus_name, test_size, filedir, filename,
                                              seed = seed,
                                              max_count = max_count)
 
-    writefile(train_data, os.path.join(filedir,'train'), filename+'-train.conll')
-    writefile(test_data, os.path.join(filedir,'test'), filename+'-test.conll')
+    writefile(train_data, os.path.join(filedir,'train'), f'{filename}-train.conll')
+    writefile(test_data, os.path.join(filedir,'test'), f'{filename}-test.conll')
 
     return train_data, test_data
 
@@ -79,7 +79,7 @@ def stratified_split(sentences, test_size, max_count = 2, seed = 42):
 
     """
     labels = [[iob for (x,iob) in d] for d in sentences]
-    tags = list(set([i for s in labels for i in s if i[0]=='B']))
+    tags = list({i for s in labels for i in s if i[0]=='B'})
     inds = range(len(labels))
 
     Y = [_map_labels(l, tags, max_count) for l in labels]
@@ -114,9 +114,18 @@ def check_label_ratios(train_data, test_data, orig_data, tags):
     entity class tags to compare.
 
     """
-    train_tagcounts =  [ sum([len([i for i in T if i[1] == tag]) for T in train_data]) for tag in tags]
-    test_tagcounts =  [ sum([len([i for i in T if i[1] == tag]) for T in test_data]) for tag in tags]
-    orig_tagcounts =  [ sum([len([i for i in T if i[1] == tag]) for T in orig_data]) for tag in tags]
+    train_tagcounts = [
+        sum(len([i for i in T if i[1] == tag]) for T in train_data)
+        for tag in tags
+    ]
+    test_tagcounts = [
+        sum(len([i for i in T if i[1] == tag]) for T in test_data)
+        for tag in tags
+    ]
+    orig_tagcounts = [
+        sum(len([i for i in T if i[1] == tag]) for T in orig_data)
+        for tag in tags
+    ]
 
     train_ratios = [float(i)/sum(train_tagcounts) for i in train_tagcounts]
     test_ratios = [float(i)/sum(test_tagcounts) for i in test_tagcounts]
@@ -140,10 +149,7 @@ def _map_labels(labels, tags, max_count = 2):
     counts = [labels.count(t) for t in tags]
     # Any counts greater than max_count are put in the same 'bin' as max_count
     for i in range(len(counts)):
-        if counts[i] > max_count:
-            counts[i] = max_count
-
-    Y = int("".join(map(str, counts)), base = base)
-    return Y
+        counts[i] = min(counts[i], max_count)
+    return int("".join(map(str, counts)), base = base)
 
 
